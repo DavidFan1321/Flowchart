@@ -16,28 +16,42 @@
   <link href="https://fonts.googleapis.com/css2?family=Roboto&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@9"></script>
   <script src="https://unpkg.com/micromodal/dist/micromodal.min.js"></script>
-
+  <script src="./FileSaver.js"></script>   
 
   <header>
     <h2>Drawflow</h2>
-    <div class="github-link"><a href="https://github.com/jerosoler/Drawflow" target="_blank"><i class="fab fa-github fa-3x"></i></a></div>
-    <div class="them-edit-link"><a href="https://jerosoler.github.io/drawflow-theme-generator/" target="_blank">🎨</a></div>
   </header>
   <div class="wrapper">
     <div class="col">
       <div class="drag-drawflow" draggable="true" ondragstart="drag(event)" data-node="start">
-        <span> Start</span>
+        <span>开始</span>
       </div>
       <div class="drag-drawflow" draggable="true" ondragstart="drag(event)" data-node="dialog">
-        <span>Dialog</span>
+        <span>对话</span>
+      </div>
+      <div class="drag-drawflow" draggable="true" ondragstart="drag(event)" data-node="action">
+        <span>行动/后果/改动</span>
+      </div>
+      <div class="drag-drawflow" draggable="true" ondragstart="drag(event)" data-node="branch">
+        <span>分支</span>
+      </div>
+      <div class="drag-drawflow" draggable="true" ondragstart="drag(event)" data-node="choice2">
+        <span>两个选择</span>
+      </div>
+      <div class="drag-drawflow" draggable="true" ondragstart="drag(event)" data-node="choice3">
+        <span>三个选择</span>
+      </div>
+      <div class="drag-drawflow" draggable="true" ondragstart="drag(event)" data-node="choice4">
+        <span>四个选择</span>
       </div>
 
 
     </div>
     <div class="col-right">
       <div id="drawflow" ondrop="drop(event)" ondragover="allowDrop(event)">
-
-        <div class="btn-export" onclick="console.log((editor.export().drawflow.Home.data))">Export</div>
+        <input type="file" id="selectFiles" value="Import" /><br />
+        <button id="import" class = btn-import>Import</button>
+        <div class="btn-export" onclick="window.saveAs(new Blob([JSON.stringify(editor.export())],{type:'application/json'}), 'a.json')">Export</div>
         <div class="btn-clear" onclick="editor.clearModuleSelected()">Clear</div>
         <div class="btn-lock">
           <i id="lock" class="fas fa-lock" onclick="editor.editor_mode='fixed'; changeMode('lock');"></i>
@@ -55,7 +69,8 @@
   <script>
     var id = document.getElementById("drawflow");
     const editor = new Drawflow(id);
-    editor.reroute = true;    editor.start();
+    editor.reroute = true;
+    editor.start();
     //editor.import(dataToImport);
 
     /* DRAG EVENT */
@@ -112,30 +127,133 @@
 
       switch (name) {
         case 'start':
-        var s = `
-        <div>
-          <div class="title-box">Start</div>
-        </div>
-        `;
-          editor.addNode('facebook', 0,  1, pos_x, pos_y, 'facebook', {}, s );
-          break;
-        case 'dialog':
-          var aws = `
+          var start = `
           <div>
-            <div class="title-box"><i class="fab fa-aws"></i> Aws Save </div>
+            <div class="title-box">开始条件</div>
             <div class="box">
-              <p>名称</p>
-              <input type="text" df-db-dbname placeholder="DB name"><br><br>
-              <p>对话</p>
-              <textarea df-db-key></textarea>
+                <input type="text" df-condition><br><br>
             </div>
           </div>
           `;
-          editor.addNode('aws', 1, 1, pos_x, pos_y, 'aws', { "db": { "dbname": '', "key": '' }}, aws );
+          editor.addNode('start', 0,  1, pos_x, pos_y, 'start', {"condition":''}, start );
+          break;
+        case 'dialog':
+          var dialog = `
+          <div>
+            <div class="title-box">对话</div>
+            <div class="box">
+              <p>名称</p>
+              <input type="text" df-name><br><br>
+              <p>对话</p>
+              <textarea df-text></textarea>
+            </div>
+          </div>
+          `;
+          editor.addNode('dialog', 1, 1, pos_x, pos_y, 'dialog', { "name": '', "text": '' }, dialog );
+          break;
+        case 'action':
+          var action = `
+          <div>
+            <div class="title-box">行动</div>
+            <div class="box">
+                <input type="text" df-action><br><br>
+            </div>
+          </div>
+          `;
+          editor.addNode('action', 1,  1, pos_x, pos_y, 'action', {"action":''}, action );
+          break;
+        case 'branch':
+          var branch = `
+          <div>
+            <div class="title-box">分支</div>
+            <div class="box">
+                <p>选择条件</p>
+                <input type="text" df-description><br><br>
+            </div>
+          </div>
+          `;
+          editor.addNode('branch', 1,  1, pos_x, pos_y, 'branch', {"description":''}, branch );
+          break;
+        case 'choice2':
+          var choice = `
+          <div>
+            <div class="title-box">选择</div>
+            <div class="box">
+                <p>标题</p>
+                <input type="title" df-c1><br><br>
+                <p>选择1</p>
+                <input type="text" df-c1><br><br>
+                <p>选择2</p>
+                <input type="text" df-c2><br><br>
+            </div>
+          </div>
+          `;
+          editor.addNode('choice2', 1,  1, pos_x, pos_y, 'choice2', {"title":'',"c1":'',"c2":''}, choice );
+          break;
+        case 'choice3':
+          var choice = `
+          <div>
+            <div class="title-box">选择</div>
+            <div class="box">
+                <p>标题</p>
+                <input type="title" df-c1><br><br>
+                <p>选择1</p>
+                <input type="text" df-c1><br><br>
+                <p>选择2</p>
+                <input type="text" df-c2><br><br>
+                <p>选择3</p>
+                <input type="text" df-c3><br><br>
+            </div>
+          </div>
+          `;
+          editor.addNode('choice3', 1,  1, pos_x, pos_y, 'choice3', {"title":'',"c1":'',"c2":'',"c3":''}, choice );
+          break;
+        case 'choice4':
+          var choice = `
+          <div>
+            <div class="title-box">选择</div>
+            <div class="box">
+                <p>标题</p>
+                <input type="title" df-c1><br><br>
+                <p>选择1</p>
+                <input type="text" df-c1><br><br>
+                <p>选择2</p>
+                <input type="text" df-c2><br><br>
+                <p>选择3</p>
+                <input type="text" df-c3><br><br>
+                <p>选择4</p>
+                <input type="text" df-c4><br><br>
+            </div>
+          </div>
+          `;
+          editor.addNode('choice4', 1,  1, pos_x, pos_y, 'choice4', {"title":'',"c1":'',"c2":'',"c3":'',"c4":''}, choice );
           break;
         default:
       }
     }
+    window.onbeforeunload = function () {
+      return "Are you sure";
+    };
+
+    document.getElementById('import').onclick = function() {
+      var files = document.getElementById('selectFiles').files;
+      console.log(files);
+      if (files.length <= 0) {
+        return false;
+      }
+
+      var fr = new FileReader();
+
+      fr.onload = function(e) { 
+      console.log(e);
+        var result = JSON.parse(e.target.result);
+        var formatted = JSON.stringify(result, null, 2);
+        console.log(result);
+        editor.import(result);
+      }
+
+      fr.readAsText(files.item(0));
+    };
   </script>
 </body>
 </html>
