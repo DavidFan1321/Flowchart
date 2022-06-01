@@ -8,15 +8,16 @@
   <meta name="description" content="Simple library for flow programming. Drawflow allows you to create data flows easily and quickly.">
 </head>
 <body>
-  <script src="https://cdn.jsdelivr.net/gh/jerosoler/Drawflow/dist/drawflow.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.13.0/js/all.min.js" integrity="sha256-KzZiKy0DWYsnwMF+X1DvQngQ2/FxF7MF3Ff72XcpuPs=" crossorigin="anonymous"></script>
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/jerosoler/Drawflow@0.0.48/dist/drawflow.min.css">
+  <script src="drawflow2.js"></script>
+  <link rel="stylesheet" href="drawflow.css">
   <link rel="stylesheet" type="text/css" href="beautiful.css" />
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.13.0/css/all.min.css" integrity="sha256-h20CPZ0QyXlBuAw7A+KluUYx/3pK+c7lYEpqLTlxjYQ=" crossorigin="anonymous" />
   <link href="https://fonts.googleapis.com/css2?family=Roboto&display=swap" rel="stylesheet">
-  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@9"></script>
   <script src="https://unpkg.com/micromodal/dist/micromodal.min.js"></script>
   <script src="./FileSaver.js"></script>   
+
+  <!-- enlarge and shrink buttons -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.13.0/js/all.min.js" integrity="sha256-KzZiKy0DWYsnwMF+X1DvQngQ2/FxF7MF3Ff72XcpuPs=" crossorigin="anonymous"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.13.0/css/all.min.css" integrity="sha256-h20CPZ0QyXlBuAw7A+KluUYx/3pK+c7lYEpqLTlxjYQ=" crossorigin="anonymous" />
 
   <header>
     <h2>Drawflow</h2>
@@ -30,19 +31,19 @@
         <span>对话</span>
       </div>
       <div class="drag-drawflow" draggable="true" ondragstart="drag(event)" data-node="action">
-        <span>行动/后果/改动</span>
+        <span>事件</span>
       </div>
-      <div class="drag-drawflow" draggable="true" ondragstart="drag(event)" data-node="branch">
+      <div class="drag-drawflow" draggable="true" ondragstart="drag(event)" data-node="branch-start">
+        <span>分支开始</span>
+      </div>
+      <div class="drag-drawflow" draggable="true" ondragstart="drag(event)" data-node="branch-node">
         <span>分支</span>
       </div>
-      <div class="drag-drawflow" draggable="true" ondragstart="drag(event)" data-node="choice2">
-        <span>两个选择</span>
+      <div class="drag-drawflow" draggable="true" ondragstart="drag(event)" data-node="choice-start">
+        <span>选择开始</span>
       </div>
-      <div class="drag-drawflow" draggable="true" ondragstart="drag(event)" data-node="choice3">
-        <span>三个选择</span>
-      </div>
-      <div class="drag-drawflow" draggable="true" ondragstart="drag(event)" data-node="choice4">
-        <span>四个选择</span>
+      <div class="drag-drawflow" draggable="true" ondragstart="drag(event)" data-node="choice-node">
+        <span>选项</span>
       </div>
 
 
@@ -53,10 +54,6 @@
         <button id="import" class = btn-import>Import</button>
         <div class="btn-export" onclick="window.saveAs(new Blob([JSON.stringify(editor.export())],{type:'application/json'}), 'a.json')">Export</div>
         <div class="btn-clear" onclick="editor.clearModuleSelected()">Clear</div>
-        <div class="btn-lock">
-          <i id="lock" class="fas fa-lock" onclick="editor.editor_mode='fixed'; changeMode('lock');"></i>
-          <i id="unlock" class="fas fa-lock-open" onclick="editor.editor_mode='edit'; changeMode('unlock');" style="display:none;"></i>
-        </div>
         <div class="bar-zoom">
           <i class="fas fa-search-minus" onclick="editor.zoom_out()"></i>
           <i class="fas fa-search" onclick="editor.zoom_reset()"></i>
@@ -78,43 +75,19 @@
     /* Mouse and Touch Actions */
 
     var elements = document.getElementsByClassName('drag-drawflow');
-    for (var i = 0; i < elements.length; i++) {
-      elements[i].addEventListener('touchend', drop, false);
-      elements[i].addEventListener('touchmove', positionMobile, false);
-      elements[i].addEventListener('touchstart', drag, false );
-    }
 
-    var mobile_item_selec = '';
-    var mobile_last_move = null;
-   function positionMobile(ev) {
-     mobile_last_move = ev;
-   }
-
-   function allowDrop(ev) {
+    function allowDrop(ev) {
       ev.preventDefault();
     }
 
     function drag(ev) {
-      if (ev.type === "touchstart") {
-        mobile_item_selec = ev.target.closest(".drag-drawflow").getAttribute('data-node');
-      } else {
       ev.dataTransfer.setData("node", ev.target.getAttribute('data-node'));
-      }
     }
 
     function drop(ev) {
-      if (ev.type === "touchend") {
-        var parentdrawflow = document.elementFromPoint( mobile_last_move.touches[0].clientX, mobile_last_move.touches[0].clientY).closest("#drawflow");
-        if(parentdrawflow != null) {
-          addNodeToDrawFlow(mobile_item_selec, mobile_last_move.touches[0].clientX, mobile_last_move.touches[0].clientY);
-        }
-        mobile_item_selec = '';
-      } else {
-        ev.preventDefault();
-        var data = ev.dataTransfer.getData("node");
-        addNodeToDrawFlow(data, ev.clientX, ev.clientY);
-      }
-
+      ev.preventDefault();
+      var data = ev.dataTransfer.getData("node");
+      addNodeToDrawFlow(data, ev.clientX, ev.clientY);
     }
 
     function addNodeToDrawFlow(name, pos_x, pos_y) {
@@ -131,11 +104,21 @@
           <div>
             <div class="title-box">开始条件</div>
             <div class="box">
-                <input type="text" df-condition><br><br>
+                <p>对象</p>
+                <input type="text" df-target><br><br>
+                <p>触发条件</p>
+                <select df-channel>
+                <option value="channel_1">时间</option>
+                <option value="channel_2">是否第一次对话</option>
+                <option value="channel_3">背包里有这件物品</option>
+                <option value="channel_0">其他</option>
+                </select>
+                <br><br>
+                <input type="text" df-content><br><br>
             </div>
           </div>
           `;
-          editor.addNode('start', 0,  1, pos_x, pos_y, 'start', {"condition":''}, start );
+          editor.addNode('start', 0,  1, pos_x, pos_y, 'start', {"target":'', "channel": 'channel_0', "content":''}, start );
           break;
         case 'dialog':
           var dialog = `
@@ -154,85 +137,79 @@
         case 'action':
           var action = `
           <div>
-            <div class="title-box">行动</div>
+            <div class="title-box">事件</div>
             <div class="box">
-                <input type="text" df-action><br><br>
+                <select df-channel>
+                <option value="channel_1">好感度提升</option>
+                <option value="channel_2">好感度节点</option>
+                <option value="channel_3">获得物品</option>
+                <option value="channel_0">其他</option>
+                </select>
+                <br><br>
+                <input type="text" df-content><br><br>
             </div>
           </div>
           `;
-          editor.addNode('action', 1,  1, pos_x, pos_y, 'action', {"action":''}, action );
+          editor.addNode('action', 1,  1, pos_x, pos_y, 'action', {"channel":'channel_0', "content":''}, action );
           break;
-        case 'branch':
+        case 'branch-start':
+          var branch = `
+          <div>
+            <div class="title-box">分支开始</div>
+            <div class="box">
+                <p>分支条件</p>
+                <select df-channel>
+                <option value="channel_1">好感</option>
+                <option value="channel_2">背包里有这件物品</option>
+                <option value="channel_0">其他</option>
+                </select>
+                <br><br>
+                <input type="text" df-content><br><br>
+            </div>
+          </div>
+          `;
+          editor.addNode('branch-start', 1,  1, pos_x, pos_y, 'branch-start', {"channel":'channel_0', "content":''}, branch );
+          break;
+        case 'branch-node':
           var branch = `
           <div>
             <div class="title-box">分支</div>
             <div class="box">
-                <p>选择条件</p>
-                <input type="text" df-description><br><br>
+                <p>条件</p>
+                <input type="text" df-condition><br><br>
             </div>
           </div>
           `;
-          editor.addNode('branch', 1,  1, pos_x, pos_y, 'branch', {"description":''}, branch );
+          editor.addNode('branch-node', 1,  1, pos_x, pos_y, 'branch-node', {"condition":''}, branch );
           break;
-        case 'choice2':
+        case 'choice-start':
           var choice = `
           <div>
-            <div class="title-box">选择</div>
+            <div class="title-box">选择开始</div>
             <div class="box">
-                <p>标题</p>
+                <p>内容</p>
                 <input type="title" df-c1><br><br>
-                <p>选择1</p>
-                <input type="text" df-c1><br><br>
-                <p>选择2</p>
-                <input type="text" df-c2><br><br>
             </div>
           </div>
           `;
-          editor.addNode('choice2', 1,  1, pos_x, pos_y, 'choice2', {"title":'',"c1":'',"c2":''}, choice );
+          editor.addNode('choice-start', 1,  1, pos_x, pos_y, 'choice-start', {"title":''}, choice );
           break;
-        case 'choice3':
+        case 'choice-node':
           var choice = `
           <div>
-            <div class="title-box">选择</div>
+            <div class="title-box">选项</div>
             <div class="box">
-                <p>标题</p>
-                <input type="title" df-c1><br><br>
-                <p>选择1</p>
-                <input type="text" df-c1><br><br>
-                <p>选择2</p>
-                <input type="text" df-c2><br><br>
-                <p>选择3</p>
-                <input type="text" df-c3><br><br>
+                <input type="text" df-choice><br><br>
             </div>
           </div>
           `;
-          editor.addNode('choice3', 1,  1, pos_x, pos_y, 'choice3', {"title":'',"c1":'',"c2":'',"c3":''}, choice );
+          editor.addNode('choice-node', 1,  1, pos_x, pos_y, 'choice-node', {"choice":''}, choice );
           break;
-        case 'choice4':
-          var choice = `
-          <div>
-            <div class="title-box">选择</div>
-            <div class="box">
-                <p>标题</p>
-                <input type="title" df-c1><br><br>
-                <p>选择1</p>
-                <input type="text" df-c1><br><br>
-                <p>选择2</p>
-                <input type="text" df-c2><br><br>
-                <p>选择3</p>
-                <input type="text" df-c3><br><br>
-                <p>选择4</p>
-                <input type="text" df-c4><br><br>
-            </div>
-          </div>
-          `;
-          editor.addNode('choice4', 1,  1, pos_x, pos_y, 'choice4', {"title":'',"c1":'',"c2":'',"c3":'',"c4":''}, choice );
-          break;
-        default:
       }
     }
+    
     window.onbeforeunload = function () {
-      return "Are you sure";
+      return "Are you sure?";
     };
 
     document.getElementById('import').onclick = function() {
