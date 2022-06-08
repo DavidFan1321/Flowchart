@@ -106,6 +106,10 @@
             <div class="box">
                 <p>对象</p>
                 <input type="text" df-target><br><br>
+                <p>开始时间</p>
+                <input type="text" df-start><br>
+                <p>结束时间</p>
+                <input type="text" df-end><br><br>
                 <p>触发条件</p>
                 <select df-channel>
                 <option value="channel_1">时间</option>
@@ -118,7 +122,7 @@
             </div>
           </div>
           `;
-          editor.addNode('start', 0,  1, pos_x, pos_y, 'start', {"target":'', "channel": 'channel_0', "content":''}, start );
+          editor.addNode('start', 0,  1, pos_x, pos_y, 'start', {"target":'', "start":'', "end":'', "channel": 'channel_0', "content":''}, start );
           break;
         case 'dialog':
           var dialog = `
@@ -186,13 +190,9 @@
           var choice = `
           <div>
             <div class="title-box">选择开始</div>
-            <div class="box">
-                <p>内容</p>
-                <input type="title" df-c1><br><br>
-            </div>
           </div>
           `;
-          editor.addNode('choice-start', 1,  1, pos_x, pos_y, 'choice-start', {"title":''}, choice );
+          editor.addNode('choice-start', 1,  1, pos_x, pos_y, 'choice-start', {}, choice );
           break;
         case 'choice-node':
           var choice = `
